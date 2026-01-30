@@ -8,6 +8,7 @@ using UnityEditor.Animations;
 using System.Collections;
 using UnityEngine.SocialPlatforms;
 using System.ComponentModel;
+using Unity.VisualScripting;
 
 
 public class GameBoardView : MonoBehaviour
@@ -283,25 +284,40 @@ public class GameBoardView : MonoBehaviour
     public void ShowBankStack(Vector2Int startPos, int playerIndex)
     {
         GameObject stackShell = gameBoardStackShells[startPos.x, startPos.y];
-        var chips = new List<Chip>(stackShell.GetComponentsInChildren<Chip>());
-        int xMiddleIndex = (int)Mathf.Floor((float)gameBoardController.GetBoardWidth() / 2f);
-        int playerOrientation = gameBoardController.GetPlayerOrientation(playerIndex);
-        int playerSideIndex = (playerOrientation == -1) ? 0 : gameBoardController.GetBoardHeight() - 1;
-        Vector2 pos = gameBoardPositionMap[xMiddleIndex, playerSideIndex];
 
-        // position to hover first
-        Vector3 hoverPos = new Vector3(xMiddleIndex, hoverHeight, playerSideIndex + (boardSquareSize * playerOrientation));
+        List<ChipData> chipDataList = gameBoardController.GetBoardChipStack(startPos);
 
-        // Tilt up camera for this action
+        // tilt cam up for this action
 
-        // trigger coroutine to move stack to the hover location
-        // then move friendly chips above bank,
-        // then 1 by 1 with a 0.2 second delay, lep them down onto their targe spot
-        // then freeze for a time delay
-        // then move the enemy chips back to their source
-        // then stack them all down at once
+        List<Chip> playerChips = new List<Chip>();
+        List<Chip> opponentChips = new List<Chip>();
 
+        Chip currentChip;
 
+        foreach(ChipData cd in chipDataList)
+        {
+            currentChip = viewMap[cd];
+            if (cd.playerIndex == playerIndex) playerChips.Add(currentChip);
+            else opponentChips.Add(currentChip);
+        }
+
+        // call coroutine to move player chips over and down onto bank
+
+        // get bank position and move the player chips there
+        Transform bankTransform = GetBankTransforms(playerIndex);
+        Debug.Log(bankTransform);
+        Vector3 chipBankHoverPos;
+        foreach(Chip chip in playerChips)
+        {
+            chip.transform.SetParent(bankTransform, true);
+            chipBankHoverPos = new Vector3(0, chip.transform.localPosition.y, 0);
+            Coroutine co = StartCoroutine(MoveChipCoroutine(chip,chipBankHoverPos,chipLerpDuration));
+            chipMoveRoutines[chip] = co;
+        }
+
+        // move each chip down onto the stack, one by one
+
+        // when move player chips coroutine is done, then we can call the move opponent chips coroutine then stack them
 
     }
 

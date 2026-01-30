@@ -71,7 +71,20 @@ public class GameTester : MonoBehaviour
         yield return new WaitForSeconds(5);
 
         v.StopHover();
-        v.ShowPlaceStack(pos1, new Vector2Int(1,0));
+        v.ShowPlaceStack(pos1, new Vector2Int(1,2));
+
+        yield return new WaitForSeconds(2);
+
+        Vector2Int posNew1 = new Vector2Int(1,2);
+        (bool success,Vector2Int newMoves) = gbc.MoveChipStack(pos1,posNew1,new Vector2Int(6,6),0);
+        Debug.Log(success);
+        v.StartHoverStackShell(posNew1);
+        
+        yield return new WaitForSeconds(3);
+
+        v.StopHover();
+        v.ShowBankStack(posNew1, 0);
+
 
         //  for (int i = 0; i < 4; i ++)
         //  {
